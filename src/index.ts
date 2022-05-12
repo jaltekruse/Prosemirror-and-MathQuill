@@ -13,6 +13,36 @@ import { StepMap } from "prosemirror-transform";
 import katex from "katex";
 import { ParseError } from "katex";
 
+var MQ = window.MathQuill.getInterface(2);
+var config = {
+  restrictMismatchedBrackets: true,
+  autoSubscriptNumerals: true,
+  autoCommands: 'pi theta sqrt sum int',
+  autoOperatorNames: 'sin cos tan',
+  // for intuitive navigation of fractions
+  leftRightIntoCmdGoes: 'up',
+  handlers: {
+     enter: () => {
+        var obj = canvas.getActiveObject();
+        var htmlElement = document.getElementById('math_input');
+
+        var mathField = MQ.MathField(htmlElement, config);
+        //var math = mathField.latex();
+
+        if (obj && obj.type === 'image' && typeof obj.math !== 'undefined') {
+            mathField.blur();
+            whenMqChanged();
+            insertNewMath(obj);
+        } else {
+            if (evt.key === 'Enter') {
+                insertNewMath();
+            }
+        }
+     }
+  }
+
+};
+
 //// EDITOR SCHEMA /////////////////////////////////////////
 
 export const editorSchema = new Schema({
@@ -135,9 +165,23 @@ export class InlineMathView implements NodeView {
 
   selectNode() {
     this.dom.classList.add("ProseMirror-selectednode");
+    var mathField = MQ.MathField(this.contents, config);
+    let content: Node[] = (this.node.content as any).content;
+
+    // get tex string to render
+    let texString = "";
+    if (content.length > 0 && content[0].textContent !== null) {
+      texString = content[0].textContent;
+    }
+
+    mathField.latex(texString);
+
+    mathField.focus();
+    /*
     if (!this.innerView) {
       this.open();
     }
+    */
   }
 
   deselectNode() {
@@ -192,7 +236,8 @@ export class InlineMathView implements NodeView {
 
     // render katex, but fail gracefully
     try {
-      katex.render(texString, this.contents);
+      //katex.render(texString, this.contents);
+      var mathField = MQ.MathField(this.contents, config);
     } catch (err) {
       if (err instanceof ParseError) {
         console.error(err);
