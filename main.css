@@ -1,0 +1,106 @@
+article {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#editor .ProseMirror:focus {
+  outline: none;
+}
+
+p {
+  margin-left: 0.5em;
+}
+
+inlinemath {
+  min-width: 1em;
+  min-height: calc(1em);
+  background-color: rgba(0, 0, 0, 0.1);
+  display: inline-block;
+  font-size: 0.95em;
+  text-align: center;
+  cursor: auto;
+}
+
+inlinemath .math-src::after,
+inlinemath .math-src::before {
+  content: "$";
+}
+
+inlinemath .math-src {
+  display: none;
+  font-family: monospace;
+  font-size: 1.2em;
+}
+
+inlinemath .math-src .ProseMirror {
+  display: inline-block;
+}
+inlinemath .math-src .ProseMirror:focus {
+  outline: none;
+}
+inlinemath .math-render {
+  display: inline-block;
+  cursor: pointer;
+}
+inlinemath.ProseMirror-selectednode .math-src {
+  display: inline;
+}
+inlinemath.ProseMirror-selectednode .math-render {
+  display: none;
+}
+
+/* ProseMirror.css */
+
+.ProseMirror {
+  position: relative;
+}
+
+.ProseMirror {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  white-space: break-spaces;
+  -webkit-font-variant-ligatures: none;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0; /* the above doesn't seem to work in Edge */
+}
+
+.ProseMirror pre {
+  white-space: pre-wrap;
+}
+
+.ProseMirror li {
+  position: relative;
+}
+
+.ProseMirror-hideselection *::selection {
+  background: transparent;
+}
+.ProseMirror-hideselection *::-moz-selection {
+  background: transparent;
+}
+.ProseMirror-hideselection {
+  caret-color: transparent;
+}
+
+.ProseMirror-selectednode {
+  outline: 2px solid #8cf;
+}
+
+/* Make sure li selections wrap around markers */
+
+li.ProseMirror-selectednode {
+  outline: none;
+}
+
+li.ProseMirror-selectednode:after {
+  content: "";
+  position: absolute;
+  left: -32px;
+  right: -2px;
+  top: -2px;
+  bottom: -2px;
+  border: 2px solid #8cf;
+  pointer-events: none;
+}
+
