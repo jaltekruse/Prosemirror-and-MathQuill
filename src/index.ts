@@ -14,34 +14,6 @@ import katex from "katex";
 import { ParseError } from "katex";
 
 var MQ = window.MathQuill.getInterface(2);
-var config = {
-  restrictMismatchedBrackets: true,
-  autoSubscriptNumerals: true,
-  autoCommands: 'pi theta sqrt sum int',
-  autoOperatorNames: 'sin cos tan',
-  // for intuitive navigation of fractions
-  leftRightIntoCmdGoes: 'up',
-  handlers: {
-     enter: () => {
-        var obj = canvas.getActiveObject();
-        var htmlElement = document.getElementById('math_input');
-
-        var mathField = MQ.MathField(htmlElement, config);
-        //var math = mathField.latex();
-
-        if (obj && obj.type === 'image' && typeof obj.math !== 'undefined') {
-            mathField.blur();
-            whenMqChanged();
-            insertNewMath(obj);
-        } else {
-            if (evt.key === 'Enter') {
-                insertNewMath();
-            }
-        }
-     }
-  }
-
-};
 
 //// EDITOR SCHEMA /////////////////////////////////////////
 
@@ -138,6 +110,49 @@ export class InlineMathView implements NodeView {
   contents: HTMLElement;
   mathinput: HTMLElement | null;
 
+  config = {
+          restrictMismatchedBrackets: true,
+          autoSubscriptNumerals: true,
+          autoCommands: 'pi theta sqrt sum int',
+          autoOperatorNames: 'sin cos tan',
+          // for intuitive navigation of fractions
+          leftRightIntoCmdGoes: 'up',
+          handlers: {
+             enter: () => {
+                var obj = canvas.getActiveObject();
+                var htmlElement = document.getElementById('math_input');
+
+                //var mathField = MQ.MathField(htmlElement, config);
+                //var math = mathField.latex();
+
+                if (obj && obj.type === 'image' && typeof obj.math !== 'undefined') {
+                    mathField.blur();
+                    whenMqChanged();
+                    insertNewMath(obj);
+                } else {
+                    if (evt.key === 'Enter') {
+                        insertNewMath();
+                    }
+                }
+             }
+
+             edited: (mathField) => {
+                // This handler is guaranteed to be called on change, but
+                // unlike React it sometimes generates false positives.
+                // One of these is on initialization (with an empty string
+                // value), so we have to guard against that below.
+                var value = mathField.latex();
+
+                // Provide a MathQuill-compatible way to generate the
+                // not-equals sign without pasting unicode or typing TeX
+                //value = value.replace(/<>/g, "\\ne");
+
+                //this.contents.textContent = value;
+             }
+          }
+
+        };
+
   constructor(node: ProsemirrorNode, view: EditorView, getPos: () => number) {
     this.node = node;
     this.outerView = view;
@@ -147,7 +162,7 @@ export class InlineMathView implements NodeView {
     this.dom = document.createElement("inlinemath");
     this.contents = document.createElement("span");
     this.contents.textContent = "";
-    this.contents.classList.add("math-render");
+    //this.contents.classList.add("math-render");
     this.dom.appendChild(this.contents);
 
     this.render();
@@ -164,8 +179,9 @@ export class InlineMathView implements NodeView {
   }
 
   selectNode() {
-    this.dom.classList.add("ProseMirror-selectednode");
-    var mathField = MQ.MathField(this.contents, config);
+    //this.dom.classList.add("ProseMirror-selectednode");
+
+    var mathField = MQ.MathField(this.contents, this.config);
     let content: Node[] = (this.node.content as any).content;
 
     // get tex string to render
@@ -177,6 +193,11 @@ export class InlineMathView implements NodeView {
     mathField.latex(texString);
 
     mathField.focus();
+    console.log(this.outerView.docView.dom.blur());
+    if (this.outerView.hasFocus()) {
+        alert("out view had focus, asking for blur");
+        this.outerView.blur();
+    }
     /*
     if (!this.innerView) {
       this.open();
@@ -237,7 +258,8 @@ export class InlineMathView implements NodeView {
     // render katex, but fail gracefully
     try {
       //katex.render(texString, this.contents);
-      var mathField = MQ.MathField(this.contents, config);
+      var mathField = MQ.MathField(this.contents, this.config);
+      //mathField.latex(texString);
     } catch (err) {
       if (err instanceof ParseError) {
         console.error(err);
@@ -280,10 +302,17 @@ export class InlineMathView implements NodeView {
     }
 
     // create math input field
-    let mathinput = this.dom.appendChild(document.createElement("div"));
-    mathinput.className = "math-src";
-    this.mathinput = mathinput;
+    this.dom = document.createElement("inlinemath");
+    this.contents = document.createElement("span");
+    this.contents.textContent = "";
+    //this.contents.classList.add("math-render");
+    this.dom.appendChild(this.contents);
 
+    //let mathinput = this.dom.appendChild(document.createElement("div"));
+    //mathinput.className = "math-src";
+    //this.mathinput = mathinput;
+
+    /*
     // create a nested ProseMirror view
     this.innerView = new EditorView(mathinput, {
       // You can use any node as an editor document
@@ -308,13 +337,16 @@ export class InlineMathView implements NodeView {
     });
 
     this.innerView.focus();
+    */
   }
 
   close() {
+      /*
     if (this.innerView) {
       this.innerView.destroy();
       this.innerView = null;
     }
+    */
     if (this.mathinput) {
       this.dom.removeChild(this.mathinput);
       this.mathinput = null;
@@ -322,14 +354,17 @@ export class InlineMathView implements NodeView {
   }
 
   destroy() {
+      /*
     if (this.innerView) this.close();
+    */
   }
 
   stopEvent(event: Event): boolean {
     return (
-      this.innerView !== null &&
-      event.target !== undefined &&
-      this.innerView.dom.contains(event.target as Node)
+      false
+      //this.innerView !== null &&
+      //event.target !== undefined &&
+      //this.innerView.dom.contains(event.target as Node)
     );
   }
 
